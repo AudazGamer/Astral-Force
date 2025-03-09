@@ -1,0 +1,1080 @@
+#
+#
+#                                        
+#
+#     ▄▄▄        ██████ ▄▄▄█████▓ ██▀███   ▄▄▄       ██▓    
+#    ▒████▄    ▒██    ▒ ▓  ██▒ ▓▒▓██ ▒ ██▒▒████▄    ▓██▒    
+#    ▒██  ▀█▄  ░ ▓██▄   ▒ ▓██░ ▒░▓██ ░▄█ ▒▒██  ▀█▄  ▒██░    
+#    ░██▄▄▄▄██   ▒   ██▒░ ▓██▓ ░ ▒██▀▀█▄  ░██▄▄▄▄██ ▒██░    
+#     ▓█   ▓██▒▒██████▒▒  ▒██▒ ░ ░██▓ ▒██▒ ▓█   ▓██▒░██████▒
+#     ▒▒   ▓▒█░▒ ▒▓▒ ▒ ░  ▒ ░░   ░ ▒▓ ░▒▓░ ▒▒   ▓▒█░░ ▒░▓  ░
+#      ▒   ▒▒ ░░ ░▒  ░ ░    ░      ░▒ ░ ▒░  ▒   ▒▒ ░░ ░ ▒  ░
+#      ░   ▒   ░  ░  ░    ░        ░░   ░   ░   ▒     ░ ░   
+#          ░  ░      ░              ░           ░  ░    ░  ░                                                      
+#
+#                             █████▒▒█████   ██▀███   ▄████▄  ▓█████ 
+#                           ▓██   ▒▒██▒  ██▒▓██ ▒ ██▒▒██▀ ▀█  ▓█   ▀ 
+#                           ▒████ ░▒██░  ██▒▓██ ░▄█ ▒▒▓█    ▄ ▒███   
+#                           ░▓█▒  ░▒██   ██░▒██▀▀█▄  ▒▓▓▄ ▄██▒▒▓█  ▄ 
+#                           ░▒█░   ░ ████▓▒░░██▓ ▒██▒▒ ▓███▀ ░░▒████▒    v1.0
+#                           ▒ ░   ░ ▒░▒░▒░ ░ ▒▓ ░▒▓░░ ░▒ ▒  ░░░ ▒░ ░
+#                           ░       ░ ▒ ▒░   ░▒ ░ ▒░  ░  ▒    ░ ░  ░
+#                           ░ ░   ░ ░ ░ ▒    ░░   ░ ░           ░   
+#                                   ░ ░     ░     ░ ░         ░  ░
+#                                                 ░               
+# Name: Astral Force
+# Version: v1.0 - Release                              
+# Licence: MIT     
+#
+# Developed by: AudazGamer      
+# GitHub: https://github.com/AudazGamer                
+# YouTube: https://www.youtube.com/@AudazGamer
+#
+
+options:
+    prefix: &b&lMANÁ &8»&r
+    mana.maxlevel: 30 # Nivel máximo sobrepasable de maná
+    mana.minlevel: 1 # Nivel mínimo de maná
+    mana.regenlevel: 3 # Nivel de regeneración de maná
+    mana.maxlimit: 100 # Nivel máximo limite de maná
+    mana.useability: 1 # Costo de maná por habilidad
+    mana.regentime: 60 # Tiempo de regeneración de maná
+    mana.cooldown: 10 # Recomendable menos de 6 segundos
+    mana.command: 60 # Cooldown de tiempo en comandos de habilidades
+    mana.updatebar: 1 # Tiempo de actualización de la barra de maná
+
+on load:
+    loop all players:
+        fixPlayerMana(loop-player) # Corrige el maná de los jugadores
+        fixPlayerCooldown(loop-player) # Corrige el cooldown de los jugadores
+        
+    set {_error} to false
+    if {@mana.minlevel} > {@mana.maxlevel}:
+        send "{@prefix} &cERROR: &7[mana.minlevel] &cno puede ser mayor que &7[mana.maxlevel]!" to console
+        set {_error} to true
+
+    if {@mana.regenlevel} < 1:
+        send "{@prefix} &cERROR: &7[mana.regenlevel] &cdebe estar entre 1 y &7[mana.maxlevel]!" to console
+        set {_error} to true
+
+    if {@mana.regenlevel} > {@mana.maxlevel}:
+        send "{@prefix} &cERROR: &7[mana.regenlevel] &cdebe estar entre 1 y &7[mana.maxlevel]!" to console
+        set {_error} to true
+
+    if {@mana.maxlimit} < {@mana.maxlevel}:
+        send "{@prefix} &cERROR: &7[mana.maxlimit] &cdebe ser mayor o igual a &7[mana.maxlevel]!" to console
+        set {_error} to true
+
+    if {@mana.regentime} < 1:
+        send "{@prefix} &cERROR: &7[mana.regentime] &cdebe ser al menos 1 segundo!" to console
+        set {_error} to true
+
+    if {@mana.cooldown} < 0:
+        send "{@prefix} &cERROR: &7[mana.cooldown] &cno puede ser negativo!" to console
+        set {_error} to true
+
+    if {@mana.updatebar} < 1:
+        send "{@prefix} &cERROR: &7[mana.updatebar] &cdebe ser al menos 1 segundo!" to console
+        set {_error} to true
+
+    if {_error} is true:
+        loop all players:
+            if loop-player has permission "minecraft.op":
+                send "{@prefix} Hubieron errores al cargar el script." to loop-player
+                send "&c ▪ ⚠ Advertencia: &7Configuración inconsistente." to loop-player
+                send "&c ▪ (Revisa la consola para más información)" to loop-player
+        stop
+    else:
+        send action bar "&b🔥 &7¡Maná activo!" to all players
+        play sound "block.enchantment_table.use" to all players
+        send "{@prefix} &bAstral Force&7 se ha cargado sin detectar errores." to console
+        send "" to console
+        send "&8─────────── &b&lAstral Force &8───────────" to console
+        send "&7  Información de la configuración:" to console
+        send "" to console
+        send "&8 ▪ &a+ &7LvL. Max&8 ................ &a{@mana.maxlevel}" to console
+        send "&8 ▪ &c- &7LvL. Min&8 ................ &a{@mana.minlevel}" to console
+        send "&8 ▪ &c+ &7LvL. Limit&8 .............. &a{@mana.maxlimit}" to console
+        send "&8 ▪ &c♡ &7LvL. Regen&8 .............. &a{@mana.regenlevel}" to console
+        send "&8 ▪ &c❥ &7Regen Time&8 .............. &a{@mana.regentime}s" to console
+        send "&8 ▪ &b✦ &7Ability Use&8 ............ &a{@mana.useability}" to console
+        send "&8 ▪ &b⏲ &7Ability Cooldown&8 ....... &a{@mana.cooldown}s" to console
+        send "&8 ▪ &b⏲ &7Command Cooldown&8 ........ &a{@mana.command}s" to console
+        send "" to console
+        send "&8───────────────── &b&l° &8────────────────" to console
+        send "" to console
+
+on unload:
+    loop all players:
+        send "{@prefix} Desactivando &bAstral Force &f..." to console
+        send " " to console
+        delete bossbar named "mana.bar_%loop-player%"
+        delete {player.cooldown.%{loop-player}%}
+        delete {command.cooldown.%{loop-player}%}
+
+# Funciones - Astral Force
+# Aquí se definen las funciones que se utilizan en el script
+
+function fixPlayerMana(p: player):
+    if {mana.player::%{_p}%} < {@mana.minlevel}:
+        send "{@prefix} Se corrigieron algunos niveles de maná." to console
+        set {mana.player::%{_p}%} to {@mana.minlevel}
+    if {elementalclass::%{_p}%} is not set:
+        set {elementalclass::%{_p}%} to "none"
+
+function checkmana(p: player) :: boolean:  
+    if {low.mana::%{_p}%} is true:
+        return false
+    else:
+        return true
+
+function manause(p: player, amount: number) :: boolean:
+    if {low.mana::%{_p}%} is true:
+        send action bar "&c⚡ Maná insuficiente" to {_p}
+        return false
+
+    if {elementalclass::%{_p}%} is "none":
+        send action bar "&c¡Sin clase elemental!" to {_p}
+        return false
+
+    if {mana.player::%{_p}%} < {_amount}:
+        send action bar "&c⚡ Maná insuficiente" to {_p}
+        send "{@prefix} &cNecesitas al menos %{_amount}% de maná." to {_p}
+        return false
+
+    remove {_amount} from {mana.player::%{_p}%}
+    send action bar "&b🔥 &7Maná &c-%{_amount}%" to {_p}
+    play sound "block.enchantment_table.use" at {_p}
+    return true
+
+function setCooldown(p: player):
+    set {player.cooldown.%{_p}%} to true
+    wait {@mana.cooldown} seconds
+    set {player.cooldown.%{_p}%} to false
+    send action bar "&a⚡ &7Habilidad elemental lista!" to {_p}
+
+function CommandCooldown(p: player, time: timespan):
+    set {command.cooldown.%{_p}%} to true
+    wait {_time}
+    set {command.cooldown.%{_p}%} to false
+
+function ElementCooldown(p: player, time: timespan):
+    set {element.cooldown.%{_p}%} to true
+    wait {_time}
+    set {element.cooldown.%{_p}%} to false
+
+function fixPlayerCooldown(p: player):
+    if {player.cooldown.%{_p}%} is not set:
+        set {player.cooldown.%{_p}%} to false
+    else if {player.cooldown.%{_p}%} is true:
+        set {player.cooldown.%{_p}%} to false
+
+# Eventos - Astral Force
+# Aquí se definen los eventos condicionales que se utilizan en el script
+
+on first join:
+    set {mana.player::%player%} to {@mana.maxlimit}
+
+on join:
+    fixPlayerMana(player)
+
+on quit:
+    delete bossbar named "mana.bar_%player%"
+    delete {mana.kill.cooldown::%player%::*}
+
+on death of player:
+    wait 1 tick
+    set {mana.player::%victim%} to 0
+
+on respawn:
+    wait 1 tick
+    set {mana.player::%player%} to {@mana.minlevel}
+
+on consume:
+    set {_food} to event-item
+    if {_food} is golden carrot:
+        add {@mana.regenlevel} to {mana.player::%player%}
+        draw 20 soul_fire_flame at player with offset vector(0.5, 2, 0.5) with extra 0
+        send action bar "&b🔥 &7Maná &b+{@mana.regenlevel} &a(Consumible)" to player
+    
+    else if {_food} is suspicious stew:
+        add {@mana.regenlevel} to {mana.player::%player%}
+        draw 20 soul_fire_flame at player with offset vector(0.5, 2, 0.5) with extra 0
+        send action bar "&b🔥 &7Maná &b+{@mana.regenlevel} &a(Consumible)" to player
+        
+    else if {_food} is beetroot soup:
+        add {@mana.regenlevel} to {mana.player::%player%}
+        draw 20 soul_fire_flame at player with offset vector(0.5, 2, 0.5) with extra 0
+        send action bar "&b🔥 &7Maná &b+{@mana.regenlevel} &a(Consumible)" to player
+        
+    else if {_food} is beetroot:
+        add {@mana.regenlevel} to {mana.player::%player%}
+        draw 20 soul_fire_flame at player with offset vector(0.5, 2, 0.5) with extra 0
+        send action bar "&b🔥 &7Maná &b+{@mana.regenlevel} &a(Consumible)" to player
+
+on damage:
+    if victim is a player:
+        if {elementalclass::%victim%} is "air":
+            if damage cause is fall:
+                send action bar "&b🔥 &7Livianeza &8(Habilidad innata)" to victim
+                cancel event
+            
+            else if damage cause is a player:
+                chance of 10%:
+                    send action bar "&b🔥 &7Evasión aérea &8(Habilidad innata)" to victim
+                    push attacker upwards at speed 0.1
+                    cancel event
+
+        if {elementalclass::%victim%} is "fire":
+            if damage cause is lava or fire:
+                extinguish victim
+                send action bar "&b🔥 &7Cuerpo ignifugo &8(Habilidad innata)" to victim
+                cancel event
+        
+            else if damage cause is a player:
+                chance of 10%:
+                    send action bar "&b🔥 &7Cuerpo ardiente &8(Habilidad innata)" to victim
+                    ignite attacker for 5 seconds
+                    cancel event
+
+        if {elementalclass::%victim%} is "earth":
+            if shooter is a living entity:
+                send action bar "&b🔥 &7Antibalas &8(Habilidad innata)" to victim
+                cancel event
+
+            else if damage cause is a player:
+                chance of 10%:
+                    send action bar "&b🔥 &7Piel de roca &8(Habilidad innata)" to victim
+                    damage attacker by 2 hearts
+                    cancel event
+
+        if {elementalclass::%victim%} is "water":
+            if damage cause is drowning:
+                send action bar "&b🔥 &7Respiración acuática &8(Habilidad innata)" to victim
+                cancel event
+
+            else if damage cause is a player:
+                chance of 10%:
+                    send action bar "&b🔥 &7Maldición atlantida &8(Habilidad innata)" to victim
+                    apply slowness 1 without particles to attacker
+                    cancel event
+
+
+        if {elementalclass::%victim%} is "light":
+            if damage cause is a living entity:
+                send action bar "&b🔥 &7Pacifista &8(Habilidad innata)" to victim
+                if "%victim's active potion effects%" does not contain "weakness":
+                    apply weakness 1 without particles to victim
+                push attacker upwards at speed 0.7
+                cancel event
+
+            
+            else if damage cause is a player:
+                chance of 10%:
+                    send action bar "&b🔥 &7Reflejo luminoso &8(Habilidad innata)" to victim
+                    apply blindness 4 without particles to attacker for 5 seconds
+                    cancel event
+
+        if {elementalclass::%victim%} is "dark":
+            if damage cause is a potion:
+                send action bar "&b🔥 &7Resistencia mágica &8(Habilidad innata)" to victim
+                cancel event
+
+            else if damage cause is a player:
+                chance of 10%:
+                    send action bar "&b🔥 &7Maldición de las sombras &8(Habilidad innata)" to victim
+                    apply wither without particles to attacker for 5 seconds
+                    cancel event
+    
+        if {elementalclass::%victim%} is "spacial":
+            if damage cause is a living entity:
+                send action bar "&b🔥 &7Teleportación &8(Habilidad innata)" to victim
+                loop all blocks in radius 10 around victim:
+                    y-coordinate of loop-block is higher or equal to 64
+                    block above loop-block is air 
+                    block below loop-block is air
+                    block below loop-block is not lava
+                    block below loop-block is not cactus
+                    teleport attacker to location of loop-block
+                    stop loop
+            
+            else if damage cause is a player:
+                chance of 10%:
+                    send action bar "&b🔥 &7Pulso gravitatorio &8(Habilidad innata)" to victim
+                    apply levitation 4 without particles to attacker for 5 seconds
+                    cancel event
+
+on right click with fire charge:
+    set {_player} to event-player
+    set {ability.use::%{_player}%} to checkmana({_player})
+    if {ability.use::%{_player}%} is false:
+        stop
+    else:
+        if {elementalclass::%event-player%} is "fire":
+            if {_player} is sneaking:
+                remove {@mana.useability} from {mana.player::%{_player}%}
+                shoot a fireball from player at speed 1
+                remove 1 fire charge from player
+
+on right click with wind charge:
+    set {_player} to event-player
+    set {ability.use::%{_player}%} to checkmana({_player})
+    if {ability.use::%{_player}%} is false:
+        cancel event
+        stop
+    else:
+        if {elementalclass::%event-player%} is "air":
+            if {_player} is sneaking:
+                remove {@mana.useability} from {mana.player::%{_player}%}
+            else:
+                cancel event
+        else:
+            cancel event
+
+    
+on jump:
+    set {_player} to event-player
+    set {hability.use::%{_player}%} to checkmana({_player})
+    
+    if {hability.use::%{_player}%} is false:
+        stop
+
+    if {_player} is sneaking:
+        if {player.cooldown.%{_player}%} is true:
+            send action bar "&c❌ &7Habilidad en cooldown" to {_player}
+            stop
+
+        else if {elementalclass::%player%} is "none":
+            send action bar "&c❌ &7¡No tienes clase elemental!" to {_player}
+            stop
+
+        if {elementalclass::%{_player}%} is "air":
+            cancel event
+            wait 1 tick
+            push {_player} upwards at speed 1
+            play sound "entity.phantom.flap" at {_player}
+            remove {@mana.useability} from {mana.player::%{_player}%}
+            send action bar "&a⚡ &7Corriente ascendente &8(Habilidad elemental)" to {_player}
+            setCooldown({_player})
+        
+        else if {elementalclass::%{_player}%} is "fire":       
+            wait 1 tick
+            loop all living entities in radius 6 around {_player}:
+                if loop-entity is not {_player}:
+                    ignite loop-entity for 5 seconds
+            play sound "entity.blaze.shoot" at {_player}
+            push {_player} upwards at speed 0.2
+            remove {@mana.useability} from {mana.player::%{_player}%}
+            send action bar "&a⚡ &7Lanzallamas &8(Habilidad elemental)" to {_player}
+            setCooldown({_player})
+        
+        else if {elementalclass::%{_player}%} is "earth":     
+            wait 1 tick
+            loop all living entities in radius 6 around {_player}:
+                if loop-entity is not {_player}:
+                    push loop-entity upwards at speed 1
+            play sound "block.anvil.land" at {_player}
+            remove {@mana.useability} from {mana.player::%{_player}%}
+            send action bar "&a⚡ &7Terremoto &8(Habilidad elemental)" to {_player}
+            setCooldown({_player})
+        
+        else if {elementalclass::%{_player}%} is "water":
+            wait 1 tick
+            loop all entities in radius 6 around {_player}:
+                if loop-entity is not {_player}:
+                    push loop-entity upwards at speed 0.5
+                    apply slowness 4 to loop-entity for 5 seconds
+            play sound "entity.drowned.shoot" at {_player}
+            remove {@mana.useability} from {mana.player::%{_player}%}
+            send action bar "&a⚡ &7Oleada &8(Habilidad elemental)" to {_player}
+            setCooldown({_player})
+        
+        else if {elementalclass::%{_player}%} is "light":
+            wait 1 tick
+            loop all entities in radius 6 around {_player}:
+                if loop-entity is not {_player}:
+                    push loop-entity upwards at speed 1
+                    apply glowing to loop-entity for 5 seconds
+            apply speed 2 to {_player} for 5 seconds
+            play sound "entity.lightning_bolt.thunder" at {_player}
+            remove {@mana.useability} from {mana.player::%{_player}%}
+            send action bar "&a⚡ &7Velocidad de la luz &8(Habilidad elemental)" to {_player}
+            setCooldown({_player})
+        
+        else if {elementalclass::%{_player}%} is "dark":
+            wait 1 tick
+            loop all entities in radius 6 around {_player}:
+                if loop-entity is not {_player}:
+                    push loop-entity upwards at speed 0.1
+                    apply darkness to loop-entity for 5 seconds
+            apply invisibility 2 to {_player} for 5 seconds
+            play sound "entity.enderman.teleport" at {_player}
+            remove {@mana.useability} from {mana.player::%{_player}%}
+            send action bar "&a⚡ &7Sombra &8(Habilidad elemental)" to {_player}
+            setCooldown({_player})
+        
+        else if {elementalclass::%{_player}%} is "spacial":
+            loop all entities in radius 6 around {_player}:
+                if loop-entity is not {_player}:
+                    push loop-entity upwards at speed 1
+                    apply levitation 2 to loop-entity for 5 seconds
+            play sound "entity.shulker.shoot" at {_player}
+            remove {@mana.useability} from {mana.player::%{_player}%}
+            send action bar "&a⚡ &7Pulso gravitatorio &8(Habilidad elemental)" to {_player}
+            setCooldown({_player})
+
+# Eventos de tiempo - Astral Force
+# Aquí se definen los eventos de tiempo que se utilizan en el script
+
+every {@mana.regentime} seconds:
+    loop all players:
+        if {mana.player::%loop-player%} < {@mana.maxlevel}:
+            draw 20 soul_fire_flame at loop-player with offset vector(0.5, 2, 0.5) with extra 0
+            set {_newmana} to {mana.player::%loop-player%} + {@mana.regenlevel}
+            if {_newmana} > {@mana.maxlevel}:
+                set {_newmana} to {@mana.maxlevel}
+            set {mana.player::%loop-player%} to {_newmana}
+
+        if loop-player has permission "minecraft.op":
+            set {mana.player::%{loop-player}%} to {@mana.maxlimit}
+
+
+every {@mana.updatebar} seconds:
+    loop all players:
+        set {_player} to loop-player
+        set {_mana} to {mana.player::%{_player}%}
+        set {_maxLimit} to {@mana.maxlimit}
+        set {_maxLevel} to {@mana.maxlevel}
+        set {_minLevel} to {@mana.minlevel}
+        set {_mana.bar} to bossbar named "mana.bar_%{_player}%"
+
+        if {_mana.bar} is not set:
+            set {_mana.bar} to bossbar named "mana.bar_%{_player}%" with title "&b🔥 &7Maná (&b%{_mana}%&7/&b%{_maxLevel}%&7)" with color blue with progress ({_mana} / {_maxLevel})
+
+        else if {_mana} < {_minLevel}: # Si el maná es menor al mínimo
+            remove wither from loop-player
+            set bossbar title of {_mana.bar} to "&c⚠ &7¡Maná bajo!"
+            set bossbar color of {_mana.bar} to red
+            set bossbar progress of {_mana.bar} to 0
+            set {low.mana::%{_player}%} to true
+
+        else if {_mana} = {_maxLimit}: # Si el maná es igual al máximo limite
+            set bossbar title of {_mana.bar} to "&d⚡ &f¡Hipercarga de maná!"
+            set bossbar color of {_mana.bar} to purple
+            set bossbar progress of {_mana.bar} to 100
+
+        else if {_mana} >= {_maxLevel}:
+            if {_mana} > {_maxLevel}:
+                set bossbar title of {_mana.bar} to "&a⚡ &7¡Sobrecarga de maná! (&a%{_mana}%&7/&a%{_maxLimit}%&7)"
+                set bossbar color of {_mana.bar} to green
+                set bossbar progress of {_mana.bar} to ({_mana} / {_maxLimit}) * 100
+            else:
+                set bossbar title of {_mana.bar} to "&a⚡ &7¡Maná máximo!"
+                set bossbar color of {_mana.bar} to green
+                set bossbar style of {_mana.bar} to segmented_6
+                set bossbar progress of {_mana.bar} to 100
+        else:
+            set bossbar title of {_mana.bar} to "&b🔥 &7Maná (&b%{_mana}%&7/&b%{_maxLevel}%&7)"
+            set bossbar color of {_mana.bar} to blue
+            set bossbar progress of {_mana.bar} to ({_mana} / {_maxLevel}) * 100
+
+        set bossbar players of {_mana.bar} to {_player}
+
+        if {_mana} >= {_minLevel}:
+            set {low.mana::%{_player}%} to false
+
+# Comandos - Astral Force
+# comandos para administrar el maná y las habilidades elementales
+
+command /mana [<text>] [<player>] [<number>]:
+    aliases: /mana
+    trigger:
+        if argument 1 is not set:
+            send "{@prefix} Uso: /maná <info|set|add|reset|fullreset> [jugador] <nivel>" to sender
+            stop
+
+        if argument 1 is "info":
+            if sender is a player:
+                send "    &b&k- &7Niveles de maná &b&k-  " to executor
+                send "&r" to executor
+                send "&7▪ Nivel actual: &b%{mana.player::%sender%}%" to sender
+                send "&7▪ Nivel máximo: &b{@mana.maxlevel}" to sender
+            else:
+                send "{@prefix} Este comando debe ejecutarse por un jugador." to sender
+            stop
+
+        if argument 1 is "set":
+            if argument 2 is set:
+                if argument 3 is a number:
+                    set {mana.player::%argument 2%} to argument 3
+                    send "{@prefix} &7Nivel de maná de &b%argument 2% &7establecido a &b%argument 3%" to sender
+                else:
+                    send "{@prefix} &cEl nivel debe ser un número." to sender
+            else:
+                send "{@prefix} Uso: /maná set <jugador> <nivel>" to sender
+            stop
+        
+        if argument 1 is "add":
+            if argument 2 is set:
+                if argument 3 is a number:
+                    add argument 3 to {mana.player::%argument 2%}
+                    send "{@prefix} &7Se ha añadido &b%argument 3% &7niveles de maná a &b%argument 2%" to sender
+                else:
+                    send "{@prefix} &cEl nivel debe ser un número." to sender
+            else:
+                send "{@prefix} Uso: /maná add <jugador> <nivel>" to sender
+            stop
+
+        if argument 1 is "reset":
+            if argument 2 is set:
+                set {mana.player::%argument 2%} to {@mana.minlevel}
+                send "{@prefix} &7Nivel de maná de &b%argument 2% &7restablecido a &b{@mana.minlevel}" to sender
+            else:
+                send "{@prefix} Uso: /maná reset <jugador>" to sender
+            stop
+
+        if argument 1 is "fullreset":
+            if {reset.confirm::%sender%} is not set:
+                set {reset.confirm::%sender%} to true
+                send "&c&l⚠ ADVERTENCIA:&7 Esto borrará &c&lTODO&7 el progreso" to sender
+                send "&7de &c&lTODOS&7 los jugadores. &c¿Realmente deseas continuar?" to sender
+                send "&c (Ejecuta el comando nuevamente para confirmar) " to sender
+                wait 10 seconds
+                delete {reset.confirm::%sender%}
+                stop
+
+            if {reset.confirm::%sender%} is true:
+                delete {reset.confirm::%sender%}
+                loop all players:
+                    delete {mana.player::%loop-player%}
+                    delete {elementalclass::%loop-player%}
+                    delete {low.mana::%loop-player%}
+                    delete {player.cooldown.%loop-player%}
+                    delete bossbar named "mana.bar_%loop-player%"
+                send "{@prefix} Todas las variables han sido restablecidas." to sender
+                stop
+
+
+command /element [<text>]:
+    trigger:
+        if {element.cooldown.%executor%} is true:
+            send "{@prefix} Espera un tiempo antes de cambiar tu clase elemental." to executor
+            stop
+
+        if argument 1 is not set:
+            send "{@prefix} &7Uso: /element <fire|water|earth|air|light|dark|spacial|info>"
+            stop
+
+        if argument 1 is "fire" or "fuego":
+            set {elementalclass::%player%} to "fire"
+            send "{@prefix} &7Has seleccionado la clase elemental de &cFuego&7."
+            ElementCooldown(executor, {@mana.command} seconds)
+
+        else if argument 1 is "water" or "agua":
+            set {elementalclass::%player%} to "water"
+            send "{@prefix} &7Has seleccionado la clase elemental de &9Agual&7."
+            ElementCooldown(executor, {@mana.command} seconds)
+
+        else if argument 1 is "earth" or "tierra":
+            set {elementalclass::%player%} to "earth"
+            send "{@prefix} &7Has seleccionado la clase elemental de &2Tierra&7."
+            ElementCooldown(executor, {@mana.command} seconds)
+
+        else if argument 1 is "air" or "aire":
+            set {elementalclass::%player%} to "air"
+            send "{@prefix} &7Has seleccionado la clase elemental de &bAire&7."
+            ElementCooldown(executor, {@mana.command} seconds)
+
+        else if argument 1 is "light" or "luz":
+            set {elementalclass::%player%} to "light"
+            send "{@prefix} &7Has seleccionado la clase elemental de &fLuz&7."
+            ElementCooldown(executor, {@mana.command} seconds)
+    
+        else if argument 1 is "dark" or "oscuridad":
+            set {elementalclass::%player%} to "dark"
+            send "{@prefix} &7Has seleccionado la clase elemental de &8Oscuridad&7."
+            ElementCooldown(executor, {@mana.command} seconds)
+
+        else if argument 1 is "spacial" or "espacial":
+            set {elementalclass::%player%} to "spacial"
+            send "{@prefix} &7Has seleccionado la clase elemental de &3Espacio&7."
+            ElementCooldown(executor, {@mana.command} seconds)
+
+        else if argument 1 is "none" or "ninguna":
+            set {elementalclass::%player%} to "none"
+            send "{@prefix} &cAhora ya no tienes ninguna clase elemental."
+            ElementCooldown(executor, {@mana.command} seconds)
+
+        else if argument 1 is "info":
+            if {elementalclass::%player%} is "none":
+                send "{@prefix} &7No has seleccionado una clase elemental aún."
+            if {elementalclass::%player%} is set:
+                send "{@prefix} &7Tu clase elemental actual es: &a%{elementalclass::%player%}%"
+        else:
+            send "{@prefix} &cClase no válida. Usa /element <fire|water|earth|air|light|dark|spacial|info>"
+
+command /abilities:
+    aliases: /hinfo
+    trigger:
+        if {elementalclass::%executor%} is "none":
+            send action bar "&c❌ &7No tienes clase elemental" to executor
+            stop
+
+        else if {elementalclass::%executor%} is not set:
+            send action bar "&c❌ &7¡Se ha producido un errror!" to executor
+            stop
+
+        send "    &b&k- &7Tus habilidades elementales &b&k-  " to executor
+        send "&r" to executor
+        
+        if {elementalclass::%executor%} is "air":
+            send "&b⚡ &7Elemento: &fAire" to executor
+            send "&b ▪ &7Habilidad innata: &fLivianeza &8(Inmunidad a caídas)" to executor
+            send "&b ▪ &7Habilidad elemental: &fCorriente ascendente &8(Agacharse + Saltar)" to executor
+            send "&b ▪ &7Comandos elementales:" to executor
+            send "&8 - &b/airburst &8- &7Empuja a los enemigos cercanos" to executor
+            send "&8 - &b/windshield &8- &7Crea un escudo de viento temporal" to executor
+            
+        else if {elementalclass::%executor%} is "fire":
+            send "&b⚡ &7Elemento: &cFuego" to executor
+            send "&b ▪ &7Habilidad innata: &fCuerpo ignífugo &8(Inmunidad al fuego/lava)" to executor
+            send "&b ▪ &7Habilidad elemental: &fLanzallamas &8(Agacharse + Saltar)" to executor
+            send "&b ▪ &7Comandos elementales:" to executor
+            send "&8 - &b/firering &8- &7Crea un anillo de fuego a tu alrededor" to executor
+            send "&8 - &b/heatwave &8- &7Aplica efecto de quemadura a objetivos" to executor
+            
+        else if {elementalclass::%executor%} is "earth":
+            send "&b⚡ &7Elemento: &2Tierra" to executor
+            send "&b ▪ &7Habilidad innata: &fAntibalas &8(Inmunidad a proyectiles)" to executor
+            send "&b ▪ &7Habilidad elemental: &fTerremoto &8(Agacharse + Saltar)" to executor
+            send "&b ▪ &7Comandos elementales:" to executor
+            send "&8 - &b/rockwall &8- &7(Crea una pared protectora)" to executor
+            send "&8 - &b/stonefist &8- &7(Aumenta tu fuerza temporalmente)" to executor
+            
+        else if {elementalclass::%executor%} is "water":
+            send "&b⚡ &7Elemento: &1Agua" to executor
+            send "&b ▪ &7Habilidad innata: &fRespiración acuática &8(No te ahogas)" to executor
+            send "&b ▪ &7Habilidad elemental: &fOleada &8(Agacharse + Saltar)" to executor
+            send "&b ▪ &7Comandos elementales:" to executor
+            send "&8 - &b/waterbubble &8- &7Crea una burbuja curativa" to executor
+            send "&8 - &b/frostbite &8- &7Congela a los enemigos cercanos" to executor
+            
+        else if {elementalclass::%executor%} is "light":
+            send "&b⚡ &7Elemento: &eLuz" to executor
+            send "&b ▪ &7Habilidad innata: &fPacifista &8(Inmunidad a ataques directos)" to executor
+            send "&b ▪ &7Habilidad elemental: &fVelocidad de la luz &8(Agacharse + Saltar)" to executor
+            send "&b ▪ &7Comandos elementales:" to executor
+            send "&8 - &b/illuminate &8- &7Revela y marca a los enemigos" to executor
+            send "&8 - &b/blessing &8- &7Otorga regeneración temporal" to executor
+            
+        else if {elementalclass::%executor%} is "dark":
+            send "&b⚡ &7Elemento: &8Oscuridad" to executor
+            send "&b ▪ &7Habilidad innata: &fResistencia mágica &8(Inmunidad a pociones)" to executor
+            send "&b ▪ &7Habilidad elemental: &fSombra &8(Agacharse + Saltar)" to executor
+            send "&b ▪ &7Comandos elementales:" to executor
+            send "&8 - &b/shadowstep &8- &7Teletransportación corta" to executor
+            send "&8 - &b/lifedrain &8- &7Roba vida de enemigos cercanos" to executor
+            
+        else if {elementalclass::%executor%} is "spacial":
+            send "&b⚡ &7Elemento: &dEspacial" to executor
+            send "&b ▪ &7Habilidad innata: &fTeleportación &8(Teletransporta atacantes)" to executor
+            send "&b ▪ &7Habilidad elemental: &fPulso gravitatorio &8(Agacharse + Saltar)" to executor
+            send "&b ▪ &7Comandos elementales:" to executor
+            send "&8 - &b/gravitywell &8- &7Crea una zona de gravedad alterada" to executor
+            send "&8 - &b/voidrift &8- &7Crea un portal temporal" to executor
+
+command /heal:
+    trigger:
+        set {_manaRequired} to 10 
+
+        if {command.cooldown.%executor%} is true:
+            send action bar "&c❌ &7¡Espera un momento!" to executor
+            stop
+
+        set {_canUse} to manause(executor, {_manaRequired})
+        if {_canUse} is true:
+            heal executor by 4 hearts
+            send action bar "&a⚡ &7Salud mejorada" to executor
+            remove {_manaRequired} from {mana.player::%executor%}
+            CommandCooldown(executor, {@mana.command} seconds)
+        else:
+            send action bar "&c❌ &7No tienes suficiente maná" to executor
+
+command /boost:
+    trigger:
+        set {_manaRequired} to 10 
+
+        if {command.cooldown.%executor%} is true:
+            send action bar "&c❌ &7¡Espera un momento!" to executor
+            stop
+
+        set {_canUse} to manause(executor, {_manaRequired})
+        if {_canUse} is true:
+            apply strength 2 to executor for 30 seconds
+            send action bar "&a⚡ &7Fuerza mejorada" to executor
+            remove {_manaRequired} from {mana.player::%executor%}
+            CommandCooldown(executor, {@mana.command} seconds)
+        else:
+            send action bar "&c❌ &7No tienes suficiente maná" to executor
+
+command /airburst:
+    trigger:
+        set {_manaRequired} to 15
+        
+        if {elementalclass::%executor%} is not "air":
+            send action bar "&c❌ &7No tienes la clase elemental de Aire" to executor
+            stop
+            
+        if {command.cooldown.%executor%} is true:
+            send action bar "&c❌ &7¡Espera un momento!" to executor
+            stop
+            
+        set {_canUse} to manause(executor, {_manaRequired})
+        if {_canUse} is true:
+            loop all entities in radius 5 around executor:
+                if loop-entity is not executor:
+                    set {_dir} to vector from executor to loop-entity
+                    set {_dir} to normalized {_dir}
+                    set {_v} to {_dir} * 2
+                    set velocity of loop-entity to {_v}
+            play sound "entity.phantom.ambient" with volume 1 at executor
+            send action bar "&a⚡ &7¡Ráfaga de aire!" to executor
+            remove {_manaRequired} from {mana.player::%executor%}
+            CommandCooldown(executor, {@mana.command} seconds)
+        else:
+            send action bar "&c❌ &7No tienes suficiente maná" to executor
+            
+command /windshield:
+    trigger:
+        set {_manaRequired} to 20
+        
+        if {elementalclass::%executor%} is not "air":
+            send action bar "&c❌ &7No tienes la clase elemental de Aire" to executor
+            stop
+            
+        if {command.cooldown.%executor%} is true:
+            send action bar "&c❌ &7¡Espera un momento!" to executor
+            stop
+            
+        set {_canUse} to manause(executor, {_manaRequired})
+        if {_canUse} is true:
+            apply resistance 1 to executor for 15 seconds
+            play sound "entity.phantom.flap" with volume 1 at executor
+            send action bar "&a⚡ &7¡Escudo de viento activado!" to executor
+            remove {_manaRequired} from {mana.player::%executor%}
+            CommandCooldown(executor, {@mana.command} seconds)
+        else:
+            send action bar "&c❌ &7No tienes suficiente maná" to executor
+
+command /firering:
+    trigger:
+        set {_manaRequired} to 18
+        
+        if {elementalclass::%executor%} is not "fire":
+            send action bar "&c❌ &7No tienes la clase elemental de Fuego" to executor
+            stop
+            
+        if {command.cooldown.%executor%} is true:
+            send action bar "&c❌ &7¡Espera un momento!" to executor
+            stop
+            
+        set {_canUse} to manause(executor, {_manaRequired})
+        if {_canUse} is true:
+            set {_loc} to location of executor
+            loop 16 times:
+                set {_angle} to loop-number * 22.5
+                set {_x} to 3 * cos({_angle})
+                set {_z} to 3 * sin({_angle})
+                set {_fireloc} to {_loc} ~ vector({_x}, 0, {_z})
+                make 5 of flame at {_fireloc} with extra 0.1
+                wait 1 tick
+            
+            play sound "entity.blaze.shoot" with volume 1 at executor
+            send action bar "&a⚡ &7¡Anillo de fuego!" to executor
+            remove {_manaRequired} from {mana.player::%executor%}
+            CommandCooldown(executor, {@mana.command} seconds)
+        else:
+            send action bar "&c❌ &7No tienes suficiente maná" to executor
+
+command /heatwave:
+    trigger:
+        set {_manaRequired} to 16
+        
+        if {elementalclass::%executor%} is not "fire":
+            send action bar "&c❌ &7No tienes la clase elemental de Fuego" to executor
+            stop
+            
+        if {command.cooldown.%executor%} is true:
+            send action bar "&c❌ &7¡Espera un momento!" to executor
+            stop
+            
+        set {_canUse} to manause(executor, {_manaRequired})
+        if {_canUse} is true:
+            loop all entities in radius 8 around executor:
+                if loop-entity is not executor:
+                    ignite loop-entity for 3 seconds
+                    apply weakness 1 to loop-entity for 5 seconds
+            
+            play sound "entity.blaze.ambient" with volume 1 at executor
+            send action bar "&a⚡ &7¡Onda de calor!" to executor
+            remove {_manaRequired} from {mana.player::%executor%}
+            CommandCooldown(executor, {@mana.command} seconds)
+        else:
+            send action bar "&c❌ &7No tienes suficiente maná" to executor
+
+command /rockwall:
+    trigger:
+        set {_manaRequired} to 20
+        
+        if {elementalclass::%executor%} is not "earth":
+            send action bar "&c❌ &7No tienes la clase elemental de Tierra" to executor
+            stop
+            
+        if {command.cooldown.%executor%} is true:
+            send action bar "&c❌ &7¡Espera un momento!" to executor
+            stop
+            
+        set {_canUse} to manause(executor, {_manaRequired})
+        if {_canUse} is true:
+            apply resistance 2 to executor for 15 seconds
+            apply slowness 1 to executor for 15 seconds
+            
+            play sound "block.stone.break" with volume 1 at executor
+            send action bar "&a⚡ &7¡Muro de roca activo!" to executor
+            remove {_manaRequired} from {mana.player::%executor%}
+            CommandCooldown(executor, {@mana.command} seconds)
+        else:
+            send action bar "&c❌ &7No tienes suficiente maná" to executor
+
+command /stonefist:
+    trigger:
+        set {_manaRequired} to 18
+        
+        if {elementalclass::%executor%} is not "earth":
+            send action bar "&c❌ &7No tienes la clase elemental de Tierra" to executor
+            stop
+            
+        if {command.cooldown.%executor%} is true:
+            send action bar "&c❌ &7¡Espera un momento!" to executor
+            stop
+            
+        set {_canUse} to manause(executor, {_manaRequired})
+        if {_canUse} is true:
+            apply strength 2 to executor for 10 seconds
+            
+            play sound "block.gravel.break" with volume 1 at executor
+            send action bar "&a⚡ &7¡Puño de piedra activado!" to executor
+            remove {_manaRequired} from {mana.player::%executor%}
+            CommandCooldown(executor, {@mana.command} seconds)
+        else:
+            send action bar "&c❌ &7No tienes suficiente maná" to executor
+
+command /waterbubble:
+    trigger:
+        set {_manaRequired} to 16
+        
+        if {elementalclass::%executor%} is not "water":
+            send action bar "&c❌ &7No tienes la clase elemental de Agua" to executor
+            stop
+            
+        if {command.cooldown.%executor%} is true:
+            send action bar "&c❌ &7¡Espera un momento!" to executor
+            stop
+            
+        set {_canUse} to manause(executor, {_manaRequired})
+        if {_canUse} is true:
+            apply regeneration 1 to executor for 7 seconds
+            apply water breathing to executor for 30 seconds
+            
+            play sound "entity.drowned.ambient" with volume 1 at executor
+            send action bar "&a⚡ &7¡Burbuja curativa!" to executor
+            remove {_manaRequired} from {mana.player::%executor%}
+            CommandCooldown(executor, {@mana.command} seconds)
+        else:
+            send action bar "&c❌ &7No tienes suficiente maná" to executor
+
+command /frostbite:
+    trigger:
+        set {_manaRequired} to 18
+        
+        if {elementalclass::%executor%} is not "water":
+            send action bar "&c❌ &7No tienes la clase elemental de Agua" to executor
+            stop
+            
+        if {command.cooldown.%executor%} is true:
+            send action bar "&c❌ &7¡Espera un momento!" to executor
+            stop
+            
+        set {_canUse} to manause(executor, {_manaRequired})
+        if {_canUse} is true:
+            loop all entities in radius 6 around executor:
+                if loop-entity is not executor:
+                    apply slowness 3 to loop-entity for 5 seconds
+                    apply mining fatigue 1 to loop-entity for 5 seconds
+            
+            play sound "block.glass.break" with volume 1 at executor
+            send action bar "&a⚡ &7¡Congelación activada!" to executor
+            remove {_manaRequired} from {mana.player::%executor%}
+            CommandCooldown(executor, {@mana.command} seconds)
+        else:
+            send action bar "&c❌ &7No tienes suficiente maná" to executor
+
+command /illuminate:
+    trigger:
+        set {_manaRequired} to 15
+        
+        if {elementalclass::%executor%} is not "light":
+            send action bar "&c❌ &7No tienes la clase elemental de Luz" to executor
+            stop
+            
+        if {command.cooldown.%executor%} is true:
+            send action bar "&c❌ &7¡Espera un momento!" to executor
+            stop
+            
+        set {_canUse} to manause(executor, {_manaRequired})
+        if {_canUse} is true:
+            loop all entities in radius 20 around executor:
+                if loop-entity is not executor:
+                    apply glowing to loop-entity for 15 seconds
+            
+            play sound "block.beacon.activate" with volume 1 at executor
+            send action bar "&a⚡ &7¡Iluminación!" to executor
+            remove {_manaRequired} from {mana.player::%executor%}
+            CommandCooldown(executor, {@mana.command} seconds)
+        else:
+            send action bar "&c❌ &7No tienes suficiente maná" to executor
+
+command /blessing:
+    trigger:
+        set {_manaRequired} to 20
+        
+        if {elementalclass::%executor%} is not "light":
+            send action bar "&c❌ &7No tienes la clase elemental de Luz" to executor
+            stop
+            
+        if {command.cooldown.%executor%} is true:
+            send action bar "&c❌ &7¡Espera un momento!" to executor
+            stop
+            
+        set {_canUse} to manause(executor, {_manaRequired})
+        if {_canUse} is true:
+            apply regeneration 2 to executor for 8 seconds
+            apply absorption 1 to executor for 15 seconds
+            
+            play sound "entity.experience_orb.pickup" with volume 1 at executor
+            send action bar "&a⚡ &7¡Bendición activada!" to executor
+            remove {_manaRequired} from {mana.player::%executor%}
+            CommandCooldown(executor, {@mana.command} seconds)
+        else:
+            send action bar "&c❌ &7No tienes suficiente maná" to executor
+
+command /shadowstep:
+    trigger:
+        set {_manaRequired} to 15
+        
+        if {elementalclass::%executor%} is not "dark":
+            send action bar "&c❌ &7No tienes la clase elemental de Oscuridad" to executor
+            stop
+            
+        if {command.cooldown.%executor%} is true:
+            send action bar "&c❌ &7¡Espera un momento!" to executor
+            stop
+            
+        set {_canUse} to manause(executor, {_manaRequired})
+        if {_canUse} is true:
+            set {_loc} to location 7 meters in front of executor
+            teleport executor to {_loc}
+            apply invisibility to executor for 2 seconds
+            
+            play sound "entity.enderman.teleport" with volume 1 at executor
+            send action bar "&a⚡ &7¡Paso sombrío!" to executor
+            remove {_manaRequired} from {mana.player::%executor%}
+            CommandCooldown(executor, {@mana.command} seconds)
+        else:
+            send action bar "&c❌ &7No tienes suficiente maná" to executor
+
+command /lifedrain:
+    trigger:
+        set {_manaRequired} to 20
+        
+        if {elementalclass::%executor%} is not "dark":
+            send action bar "&c❌ &7No tienes la clase elemental de Oscuridad" to executor
+            stop
+            
+        if {command.cooldown.%executor%} is true:
+            send action bar "&c❌ &7¡Espera un momento!" to executor
+            stop
+            
+        set {_canUse} to manause(executor, {_manaRequired})
+        if {_canUse} is true:
+            set {_found} to false
+            loop all entities in radius 6 around executor:
+                if loop-entity is not executor:
+                    if loop-entity is a player or a monster:
+                        damage loop-entity by 3 hearts
+                        heal executor by 1 heart
+                        set {_found} to true
+            
+            if {_found} is true:
+                play sound "entity.wither.hurt" with volume 1 at executor
+                send action bar "&a⚡ &7¡Drenaje de vida!" to executor
+                remove {_manaRequired} from {mana.player::%executor%}
+                CommandCooldown(executor, {@mana.command} seconds)
+            else:
+                send action bar "&c❌ &7No hay objetivos cercanos" to executor
+        else:
+            send action bar "&c❌ &7No tienes suficiente maná" to executor
+
+command /gravitywell:
+    trigger:
+        set {_manaRequired} to 22
+        
+        if {elementalclass::%executor%} is not "spacial":
+            send action bar "&c❌ &7No tienes la clase elemental de Espacial" to executor
+            stop
+            
+        if {command.cooldown.%executor%} is true:
+            send action bar "&c❌ &7¡Espera un momento!" to executor
+            stop
+            
+        set {_canUse} to manause(executor, {_manaRequired})
+        if {_canUse} is true:
+            loop all entities in radius 10 around executor:
+                if loop-entity is not executor:
+                    apply slowness 5 to loop-entity for 5 seconds
+            
+            play sound "entity.shulker.ambient" with volume 1 at executor
+            send action bar "&a⚡ &7¡Pozo gravitatorio!" to executor
+            remove {_manaRequired} from {mana.player::%executor%}
+            CommandCooldown(executor, {@mana.command} seconds)
+        else:
+            send action bar "&c❌ &7No tienes suficiente maná" to executor
+
+command /voidrift:
+    trigger:
+        set {_manaRequired} to 25
+        
+        if {elementalclass::%executor%} is not "spacial":
+            send action bar "&c❌ &7No tienes la clase elemental de Espacial" to executor
+            stop
+            
+        if {command.cooldown.%executor%} is true:
+            send action bar "&c❌ &7¡Espera un momento!" to executor
+            stop
+            
+        set {_canUse} to manause(executor, {_manaRequired})
+        if {_canUse} is true:
+            apply resistance 3 to executor for 5 seconds
+            set {_orig} to location of executor
+            wait 10 seconds
+            
+            if executor is online:
+                teleport executor to {_orig}
+                apply nausea to executor for 3 seconds
+            
+            play sound "entity.enderman.teleport" with volume 1 at executor
+            send action bar "&a⚡ &7¡Grieta del vacío activada!" to executor
+            remove {_manaRequired} from {mana.player::%executor%}
+            CommandCooldown(executor, {@mana.command} seconds)
+        else:
+            send action bar "&c❌ &7No tienes suficiente maná" to executor
